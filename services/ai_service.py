@@ -1,7 +1,6 @@
 from google import genai
 from google.genai import errors
 from mistralai.client import Mistral
-import ollama
 import time
 
 
@@ -33,7 +32,6 @@ class AIService:
         self.gemini = None
 
         if gemini_key:
-
             self.gemini = genai.Client(
                 api_key=gemini_key
             )
@@ -45,16 +43,9 @@ class AIService:
         self.mistral = None
 
         if mistral_key:
-
             self.mistral = Mistral(
                 api_key=mistral_key
             )
-
-        # =========================
-        # Ollama
-        # =========================
-
-        self.ollama_model = "qwen3:8b"
 
 
     # =====================================================
@@ -64,13 +55,12 @@ class AIService:
     def generate_with_gemini(self, prompt):
 
         if self.gemini is None:
-
             raise Exception(
                 "Gemini API key is not available."
             )
 
         response = self.gemini.models.generate_content(
-            model="gemini-3.6-flash",
+            model="gemini-1.5-flash",
             contents=prompt
         )
 
@@ -84,15 +74,12 @@ class AIService:
     def generate_with_mistral(self, prompt):
 
         if self.mistral is None:
-
             raise Exception(
                 "Mistral API key is not available."
             )
 
         response = self.mistral.chat.complete(
-
             model="mistral-small-latest",
-
             messages=[
                 {
                     "role": "user",
@@ -102,27 +89,6 @@ class AIService:
         )
 
         return response.choices[0].message.content
-
-
-    # =====================================================
-    # OLLAMA
-    # =====================================================
-
-    def generate_with_ollama(self, prompt):
-
-        response = ollama.chat(
-
-            model=self.ollama_model,
-
-            messages=[
-                {
-                    "role": "user",
-                    "content": prompt
-                }
-            ]
-        )
-
-        return response["message"]["content"]
 
 
     # =====================================================
@@ -136,7 +102,6 @@ class AIService:
         # =================================================
 
         try:
-
             print("🤖 Trying Gemini...")
 
             result = self.generate_with_gemini(
@@ -144,60 +109,25 @@ class AIService:
             )
 
             if result and result.strip():
-
                 print("✅ Used Gemini")
-
                 return result
-
 
         except errors.ClientError as e:
 
-            # ---------------------------------------------
-            # Gemini 429
-            # ---------------------------------------------
-
             if getattr(e, "code", None) == 429:
-
-                print(
-                    "⚠️ Gemini quota/rate limit exceeded."
-                )
-
-            # ---------------------------------------------
-            # Gemini 503
-            # ---------------------------------------------
+                print("⚠️ Gemini quota/rate limit exceeded.")
 
             elif getattr(e, "code", None) == 503:
-
-                print(
-                    "⚠️ Gemini is temporarily unavailable (503)."
-                )
-
-            # ---------------------------------------------
-            # Other Gemini client errors
-            # ---------------------------------------------
+                print("⚠️ Gemini is temporarily unavailable (503).")
 
             else:
+                print("❌ Gemini ClientError:", e)
 
-                print(
-                    "❌ Gemini ClientError:",
-                    e
-                )
-
-            print(
-                "🔄 Switching to Mistral..."
-            )
-
+            print("🔄 Switching to Mistral...")
 
         except Exception as e:
-
-            print(
-                "❌ Gemini error:",
-                e
-            )
-
-            print(
-                "🔄 Switching to Mistral..."
-            )
+            print("❌ Gemini error:", e)
+            print("🔄 Switching to Mistral...")
 
 
         # =================================================
@@ -205,7 +135,6 @@ class AIService:
         # =================================================
 
         try:
-
             print("🤖 Trying Mistral...")
 
             result = self.generate_with_mistral(
@@ -213,60 +142,18 @@ class AIService:
             )
 
             if result and result.strip():
-
                 print("✅ Used Mistral")
-
                 return result
 
-
         except Exception as e:
-
-            print(
-                "❌ Mistral error:",
-                e
-            )
-
-            print(
-                "🔄 Switching to Ollama..."
-            )
+            print("❌ Mistral error:", e)
 
 
         # =================================================
-        # 3️⃣ OLLAMA
+        # ALL CLOUD AI PROVIDERS FAILED
         # =================================================
 
-        try:
-
-            print("🤖 Trying Ollama...")
-
-            result = self.generate_with_ollama(
-                prompt
-            )
-
-            if result and result.strip():
-
-                print(
-                    "✅ Used Ollama (Local AI)"
-                )
-
-                return result
-
-
-        except Exception as e:
-
-            print(
-                "❌ Ollama error:",
-                e
-            )
-
-
-        # =================================================
-        # ALL AI PROVIDERS FAILED
-        # =================================================
-
-        print(
-            "❌ All AI providers failed."
-        )
+        print("❌ All cloud AI providers failed.")
 
         return (
             "Sorry, all AI services are currently "
