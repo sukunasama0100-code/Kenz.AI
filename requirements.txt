@@ -1,0 +1,7 @@
+Flask
+pypdf
+python-dotenv
+google-genai
+mistralai
+ollama
+gunicorn

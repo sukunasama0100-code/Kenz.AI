@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+```
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Kenz.AI</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+```
+
+</head>
+
+<body>
+
+<div class="container">
+
+```
+<!-- ========================= -->
+<!-- HEADER -->
+<!-- ========================= -->
+
+<div class="header">
+
+    <div class="logo">
+        🤖
+    </div>
+
+    <h1>
+        AI Document Summarizer
+    </h1>
+
+    <p>
+        Upload your PDF and let AI create a clear summary
+        in English and Arabic.
+    </p>
+
+</div>
+
+
+<!-- ========================= -->
+<!-- UPLOAD -->
+<!-- ========================= -->
+
+<div class="upload-box">
+
+    <div class="upload-icon">
+        📄
+    </div>
+
+    <h2>
+        Upload your PDF
+    </h2>
+
+    <p>
+        Select a PDF document to analyze
+    </p>
+
+    <input
+        type="file"
+        id="pdfFile"
+        accept=".pdf"
+    >
+
+
+    <div class="chunk-selector">
+
+        <label for="chunkSize">
+            📚 Pages per section
+        </label>
+
+        <select id="chunkSize">
+
+            <option value="5" selected>
+                5 pages
+            </option>
+
+            <option value="10">
+                10 pages
+            </option>
+
+            <option value="20">
+                20 pages
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <button id="uploadBtn">
+        🚀 Analyze PDF
+    </button>
+
+</div>
+
+
+<!-- ========================= -->
+<!-- LOADING -->
+<!-- ========================= -->
+
+<div id="loading">
+
+    <p class="loading-title">
+        ⏳ Analyzing PDF...
+    </p>
+
+    <div class="progress-container">
+
+        <div id="progressBar"></div>
+
+    </div>
+
+    <p id="progressText">
+        Preparing PDF...
+    </p>
+
+</div>
+
+
+<!-- ========================= -->
+<!-- RESULTS -->
+<!-- ========================= -->
+
+<div id="result">
+
+
+    <div class="pdf-info">
+
+        <span>
+            📄 Document
+        </span>
+
+        <span id="pages"></span>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- ENGLISH SUMMARY -->
+    <!-- ========================= -->
+
+    <div class="summary-section">
+
+        <div class="section-title">
+
+            🇬🇧
+
+            <h2>
+                English Summary
+            </h2>
+
+        </div>
+
+
+        <div
+            <div class="summary-box">
+
+    <div id="englishSummary"></div>
+
+    <div class="summary-speech-controls">
+
+        <button id="readSummaryBtn" class="speak-btn">
+            🔊 Read Summary
+        </button>
+
+        <button id="stopSummaryBtn" class="stop-speech-btn">
+            ⏹️ Stop
+        </button>
+
+    </div>
+
+</div>
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- ARABIC SUMMARY -->
+    <!-- ========================= -->
+
+    <div class="summary-section">
+
+        <div class="section-title arabic-title">
+
+            🇸🇦
+
+            <h2>
+                Arabic Summary
+            </h2>
+
+        </div>
+
+
+        <div
+            id="arabicSummary"
+            class="summary-box arabic">
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- PDF CHATBOT -->
+    <!-- ========================= -->
+
+    <div class="chat-section">
+
+        <div class="section-title">
+
+            💬
+
+            <h2>
+                Chat with your PDF
+            </h2>
+
+        </div>
+
+
+        <div
+            id="chatMessages"
+            class="chat-messages">
+
+            <div class="chat-message ai-message">
+
+                <strong>
+                    🤖 AI
+                </strong>
+
+                <p>
+                    Hello! You can ask me questions about your PDF.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="chat-input-container">
+
+            <input
+                type="text"
+                id="chatInput"
+                placeholder="Ask something about your PDF..."
+            >
+
+
+            <button id="sendChatBtn">
+                Send 🚀
+            </button>
+
+        </div>
+
+
+        <!-- ========================= -->
+        <!-- QUIZ MODE -->
+        <!-- ========================= -->
+
+        <div class="quiz-section">
+
+
+            <div class="section-title">
+
+                🧠
+
+                <h2>
+                    Quiz Mode
+                </h2>
+
+            </div>
+
+
+            <div class="quiz-layout">
+
+
+                <!-- ========================= -->
+                <!-- QUIZ CHUNKS -->
+                <!-- ========================= -->
+
+                <div class="quiz-chunks">
+
+                    <h3>
+                        📚 Choose Sections
+                    </h3>
+
+                    <p>
+                        Select the sections you want to use for the quiz.
+                    </p>
+
+
+                    <div id="chunkList">
+                        <!-- Sections will be added here -->
+                    </div>
+
+
+                    <button id="generalQuizBtn">
+                        🌐 General Quiz
+                    </button>
+
+
+                    <button id="startQuizBtn">
+                        🚀 Start Quiz
+                    </button>
+
+                </div>
+
+
+                <!-- ========================= -->
+                <!-- QUIZ BOT -->
+                <!-- ========================= -->
+
+                <div class="quiz-chat">
+
+
+                    <div class="quiz-bot-header">
+                        🤖 Quiz Bot
+                    </div>
+
+
+                    <div
+                        id="quizMessages"
+                        class="quiz-messages">
+
+                        <div class="quiz-message bot-message">
+
+                            <strong>
+                                🤖 Quiz Bot
+                            </strong>
+
+                            <p>
+                                Choose some sections or start a General Quiz
+                                using the entire PDF.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Quiz settings -->
+
+                    <div class="quiz-settings">
+
+
+                        <label>
+                            Questions:
+                        </label>
+
+
+                        <select id="quizQuestionCount">
+
+                            <option value="5">
+                                5 Questions
+                            </option>
+
+                            <option value="10" selected>
+                                10 Questions
+                            </option>
+
+                            <option value="15">
+                                15 Questions
+                            </option>
+
+                            <option value="20">
+                                20 Questions
+                            </option>
+
+                        </select>
+
+
+                        <label>
+                            Difficulty:
+                        </label>
+
+
+                        <select id="quizDifficulty">
+
+                            <option value="easy">
+                                Easy
+                            </option>
+
+                            <option value="medium" selected>
+                                Medium
+                            </option>
+
+                            <option value="hard">
+                                Hard
+                            </option>
+
+                        </select>
+
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+<script>
+
+
+// =====================================================
+// UPLOAD ELEMENTS
+// =====================================================
+
+const uploadBtn =
+    document.getElementById("uploadBtn");
+
+
+const fileInput =
+    document.getElementById("pdfFile");
+
+
+const chunkSize =
+    document.getElementById("chunkSize");
+
+
+const loading =
+    document.getElementById("loading");
+
+
+const result =
+    document.getElementById("result");
+
+
+const progressBar =
+    document.getElementById("progressBar");
+
+
+const progressText =
+    document.getElementById("progressText");
+
+
+const pages =
+    document.getElementById("pages");
+
+
+const englishSummary =
+    document.getElementById("englishSummary");
+
+
+const arabicSummary =
+    document.getElementById("arabicSummary");
+
+const readSummaryBtn =
+    document.getElementById("readSummaryBtn");
+
+const stopSummaryBtn =
+    document.getElementById("stopSummaryBtn");    
+
+
+
+// =====================================================
+// CHAT ELEMENTS
+// =====================================================
+
+const chatMessages =
+    document.getElementById("chatMessages");
+
+
+const chatInput =
+    document.getElementById("chatInput");
+
+
+const sendChatBtn =
+    document.getElementById("sendChatBtn");
+
+
+
+// =====================================================
+// QUIZ ELEMENTS
+// =====================================================
+
+const chunkList =
+    document.getElementById("chunkList");
+
+
+const generalQuizBtn =
+    document.getElementById("generalQuizBtn");
+
+
+const startQuizBtn =
+    document.getElementById("startQuizBtn");
+
+
+
+let currentQuiz = null;
+
+let currentQuestionIndex = 0;
+
+let quizScore = 0;
+
+
+
+// =====================================================
+// LOAD BROWSER VOICES
+// =====================================================
+
+let availableVoices = [];
+
+
+
+function loadVoices() {
+
+    availableVoices =
+        speechSynthesis.getVoices();
+
+}
+
+
+
+loadVoices();
+
+
+
+speechSynthesis.onvoiceschanged =
+    loadVoices;
+
+
+
+// =====================================================
+// GET ENGLISH VOICE
+// =====================================================
+
+function getEnglishVoice() {
+
+    const voices =
+        speechSynthesis.getVoices();
+
+
+    // First choice: Microsoft Mark
+
+    let voice =
+        voices.find(
+            voice =>
+                voice.name.includes(
+                    "Microsoft Mark"
+                )
+        );
+
+
+    // Second choice: Microsoft David
+
+    if (!voice) {
+
+        voice =
+            voices.find(
+                voice =>
+                    voice.name.includes(
+                        "Microsoft David"
+                    )
+            );
+
+    }
+
+
+    // Third choice: Microsoft Zira
+
+    if (!voice) {
+
+        voice =
+            voices.find(
+                voice =>
+                    voice.name.includes(
+                        "Microsoft Zira"
+                    )
+            );
+
+    }
+
+
+    // Any English voice as final fallback
+
+    if (!voice) {
+
+        voice =
+            voices.find(
+                voice =>
+                    voice.lang.startsWith("en")
+            );
+
+    }
+
+
+    return voice;
+
+}
+
+
+
+// =====================================================
+// UPLOAD PDF
+// =====================================================
+
+uploadBtn.addEventListener(
+    "click",
+    async function () {
+
+
+        const file =
+            fileInput.files[0];
+
+
+        if (!file) {
+
+            alert(
+                "Please select a PDF first."
+            );
+
+            return;
+
+        }
+
+
+        loading.style.display =
+            "block";
+
+
+        result.style.display =
+            "none";
+
+
+        progressBar.style.width =
+            "0%";
+
+
+        let progress = 0;
+
+
+        const progressInterval =
+            setInterval(
+                () => {
+
+                    if (progress < 90) {
+
+                        progress += 1;
+
+
+                        progressBar.style.width =
+                            progress + "%";
+
+
+                        progressText.textContent =
+                            "Analyzing PDF... " +
+                            progress +
+                            "%";
+
+                    }
+
+                },
+                300
+            );
+
+
+        const formData =
+            new FormData();
+
+
+        formData.append(
+            "file",
+            file
+        );
+
+
+        formData.append(
+            "chunk_size",
+            chunkSize.value
+        );
+
+
+        try {
+
+
+            const response =
+                await fetch(
+                    "/upload",
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (data.error) {
+
+                clearInterval(
+                    progressInterval
+                );
+
+
+                alert(
+                    data.error
+                );
+
+
+                loading.style.display =
+                    "none";
+
+
+                return;
+
+            }
+
+
+            clearInterval(
+                progressInterval
+            );
+
+
+            progressBar.style.width =
+                "100%";
+
+
+            progressText.textContent =
+                "Completed!";
+
+
+            pages.textContent =
+                data.pages +
+                " pages";
+
+
+            displaySummary(
+                data.summary
+            );
+
+            // =====================================================
+// READ ENGLISH SUMMARY
+// =====================================================
+
+readSummaryBtn.addEventListener(
+    "click",
+    () => {
+
+        speechSynthesis.cancel();
+
+        const text =
+            englishSummary.textContent.trim();
+
+        if (!text) {
+            alert("There is no English summary to read.");
+            return;
+        }
+
+        const speech =
+            new SpeechSynthesisUtterance(text);
+
+        const englishVoice =
+            getEnglishVoice();
+
+        if (englishVoice) {
+            speech.voice =
+                englishVoice;
+
+            speech.lang =
+                englishVoice.lang;
+        } else {
+            speech.lang =
+                "en-US";
+        }
+
+        speech.rate =
+            0.9;
+
+        speech.pitch =
+            1;
+
+        speechSynthesis.speak(
+            speech
+        );
+    }
+);
+
+
+// =====================================================
+// STOP SUMMARY SPEECH
+// =====================================================
+
+stopSummaryBtn.addEventListener(
+    "click",
+    () => {
+
+        speechSynthesis.cancel();
+
+    }
+);
+
+
+            // =========================================
+            // CREATE QUIZ SECTIONS
+            // =========================================
+
+            chunkList.innerHTML =
+                "";
+
+
+            data.sections.forEach(
+                section => {
+
+
+                    const label =
+                        document.createElement(
+                            "label"
+                        );
+
+
+                    label.className =
+                        "quiz-chunk-item";
+
+
+                    label.innerHTML = `
+
+                        <input
+                            type="checkbox"
+                            value="${section.index}"
+                        >
+
+                        <span>
+                            Section ${section.index + 1}
+                            — Pages ${section.start_page}–${section.end_page}
+                        </span>
+
+                    `;
+
+
+                    chunkList.appendChild(
+                        label
+                    );
+
+                }
+            );
+
+
+            setTimeout(
+                () => {
+
+                    loading.style.display =
+                        "none";
+
+
+                    result.style.display =
+                        "block";
+
+                },
+                500
+            );
+
+
+        } catch (error) {
+
+
+            clearInterval(
+                progressInterval
+            );
+
+
+            console.error(
+                error
+            );
+
+
+            loading.style.display =
+                "none";
+
+
+            alert(
+                "Something went wrong."
+            );
+
+        }
+
+    }
+);
+
+
+
+// =====================================================
+// DISPLAY SUMMARY
+// =====================================================
+
+function cleanSummary(text) {
+    return text
+        .replace(/^#{1,6}\s*/gm, "")
+        .replace(/\*\*/g, "")
+        .replace(/\*/g, "")
+        .replace(/__/g, "")
+        .replace(/_/g, "")
+        .replace(/^\s*[-•]\s*/gm, "")
+        .replace(/["“”]/g, "")
+        .replace(/^[-_=]{3,}\s*$/gm, "")
+        .replace(/[ \t]+/g, " ")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+}
+
+function displaySummary(summary) {
+    
+    const englishMarker =
+        "ENGLISH SUMMARY";
+
+
+    const arabicMarker =
+        "ARABIC SUMMARY";
+
+
+    if (
+        summary.includes(
+            englishMarker
+        )
+        &&
+        summary.includes(
+            arabicMarker
+        )
+    ) {
+
+
+        const parts =
+            summary.split(
+                arabicMarker
+            );
+
+
+        const english =
+            parts[0]
+                .replace(
+                    englishMarker,
+                    ""
+                )
+                .trim();
+
+
+        const arabic =
+            parts[1].trim();
+
+
+        englishSummary.textContent =
+    cleanSummary(english);
+
+
+        arabicSummary.textContent =
+            arabic;
+
+
+    } else {
+
+
+        englishSummary.textContent =
+    cleanSummary(summary);;
+
+
+        arabicSummary.textContent =
+            "Arabic summary could not be separated.";
+
+    }
+
+}
+
+
+
+// =====================================================
+// DISPLAY QUIZ QUESTION
+// =====================================================
+
+function displayQuizQuestion() {
+
+
+    const quizMessages =
+        document.getElementById(
+            "quizMessages"
+        );
+
+
+    quizMessages.innerHTML =
+        "";
+
+
+    const question =
+        currentQuiz.questions[
+            currentQuestionIndex
+        ];
+
+
+
+    // =========================================
+    // STOP PREVIOUS SPEECH
+    // =========================================
+
+    speechSynthesis.cancel();
+
+
+
+    // =========================================
+    // PROGRESS
+    // =========================================
+
+    const progress =
+        document.createElement(
+            "p"
+        );
+
+
+    progress.className =
+        "quiz-progress";
+
+
+    progress.textContent =
+        `Question ${currentQuestionIndex + 1} / ${currentQuiz.questions.length}`;
+
+
+    quizMessages.appendChild(
+        progress
+    );
+
+
+
+    // =========================================
+    // QUESTION
+    // =========================================
+
+    const questionDiv =
+        document.createElement(
+            "div"
+        );
+
+
+    questionDiv.className =
+        "quiz-question";
+
+
+
+    const questionTitle =
+        document.createElement(
+            "h3"
+        );
+
+
+    questionTitle.textContent =
+        question.question;
+
+
+    questionDiv.appendChild(
+        questionTitle
+    );
+
+
+
+    // =========================================
+    // SPEECH CONTROLS
+    // =========================================
+
+    const speechControls =
+        document.createElement(
+            "div"
+        );
+
+
+    speechControls.className =
+        "speech-controls";
+
+
+
+    // =========================================
+    // READ BUTTON
+    // =========================================
+
+    const speakButton =
+        document.createElement(
+            "button"
+        );
+
+
+    speakButton.className =
+        "speak-btn";
+
+
+    speakButton.textContent =
+        "🔊 Read";
+
+
+
+    speakButton.addEventListener(
+        "click",
+        () => {
+
+
+            // Stop previous speech
+
+            speechSynthesis.cancel();
+
+
+
+            // =====================================
+            // CREATE TEXT
+            // =====================================
+
+            const text =
+                question.question +
+                ". " +
+                question.options
+                    .map(
+                        (option, index) =>
+                            `${String.fromCharCode(65 + index)}. ${option}`
+                    )
+                    .join(". ");
+
+
+
+            // =====================================
+            // CREATE SPEECH
+            // =====================================
+
+            const speech =
+                new SpeechSynthesisUtterance(
+                    text
+                );
+
+
+
+            // =====================================
+            // GET ENGLISH VOICE
+            // =====================================
+
+            const englishVoice =
+                getEnglishVoice();
+
+
+
+            if (englishVoice) {
+
+                speech.voice =
+                    englishVoice;
+
+                speech.lang =
+                    englishVoice.lang;
+
+            } else {
+
+                speech.lang =
+                    "en-US";
+
+            }
+
+
+
+            // =====================================
+            // VOICE SETTINGS
+            // =====================================
+
+            speech.rate =
+                0.9;
+
+
+            speech.pitch =
+                1;
+
+
+
+            // =====================================
+            // SPEAK
+            // =====================================
+
+            speechSynthesis.speak(
+                speech
+            );
+
+        }
+    );
+
+
+
+    // =========================================
+    // STOP BUTTON
+    // =========================================
+
+    const stopButton =
+        document.createElement(
+            "button"
+        );
+
+
+    stopButton.className =
+        "stop-speech-btn";
+
+
+    stopButton.textContent =
+        "⏹️ Stop";
+
+
+
+    stopButton.addEventListener(
+        "click",
+        () => {
+
+            speechSynthesis.cancel();
+
+        }
+    );
+
+
+
+    // =========================================
+    // ADD SPEECH BUTTONS
+    // =========================================
+
+    speechControls.appendChild(
+        speakButton
+    );
+
+
+    speechControls.appendChild(
+        stopButton
+    );
+
+
+    questionDiv.appendChild(
+        speechControls
+    );
+
+
+
+    // =========================================
+    // OPTIONS
+    // =========================================
+
+    const optionsDiv =
+        document.createElement(
+            "div"
+        );
+
+
+    optionsDiv.className =
+        "quiz-options";
+
+
+
+    question.options.forEach(
+        (option, index) => {
+
+
+            const button =
+                document.createElement(
+                    "button"
+                );
+
+
+            button.className =
+                "quiz-option";
+
+
+            button.textContent =
+                `${String.fromCharCode(65 + index)}. ${option}`;
+
+
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    checkQuizAnswer(
+                        index,
+                        button
+                    );
+
+                }
+            );
+
+
+
+            optionsDiv.appendChild(
+                button
+            );
+
+        }
+    );
+
+
+
+    questionDiv.appendChild(
+        optionsDiv
+    );
+
+
+    quizMessages.appendChild(
+        questionDiv
+    );
+
+}
+
+
+
+// =====================================================
+// CHECK QUIZ ANSWER
+// =====================================================
+
+function checkQuizAnswer(
+    selectedIndex,
+    selectedButton
+) {
+
+
+    const question =
+        currentQuiz.questions[
+            currentQuestionIndex
+        ];
+
+
+
+    // Stop speech
+
+    speechSynthesis.cancel();
+
+
+
+    const optionButtons =
+        document.querySelectorAll(
+            ".quiz-option"
+        );
+
+
+
+    // Disable all buttons
+
+    optionButtons.forEach(
+        button => {
+
+            button.disabled =
+                true;
+
+        }
+    );
+
+
+
+    // =========================================
+    // CORRECT ANSWER
+    // =========================================
+
+    if (
+        selectedIndex ===
+        question.answer
+    ) {
+
+
+        quizScore++;
+
+
+        selectedButton.classList.add(
+            "correct-answer"
+        );
+
+
+    } else {
+
+
+        selectedButton.classList.add(
+            "wrong-answer"
+        );
+
+
+        optionButtons[
+            question.answer
+        ].classList.add(
+            "correct-answer"
+        );
+
+    }
+
+
+
+    // =========================================
+    // EXPLANATION
+    // =========================================
+
+    const explanation =
+        document.createElement(
+            "p"
+        );
+
+
+    explanation.className =
+        "quiz-explanation";
+
+
+    explanation.textContent =
+        question.explanation;
+
+
+
+    document
+        .getElementById(
+            "quizMessages"
+        )
+        .appendChild(
+            explanation
+        );
+
+
+
+    // =========================================
+    // NEXT BUTTON
+    // =========================================
+
+    const nextButton =
+        document.createElement(
+            "button"
+        );
+
+
+    nextButton.className =
+        "quiz-next";
+
+
+    nextButton.textContent =
+        currentQuestionIndex + 1 <
+        currentQuiz.questions.length
+            ? "Next Question →"
+            : "Finish Quiz";
+
+
+
+    nextButton.addEventListener(
+        "click",
+        () => {
+
+
+            if (
+                currentQuestionIndex + 1 <
+                currentQuiz.questions.length
+            ) {
+
+
+                currentQuestionIndex++;
+
+
+                displayQuizQuestion();
+
+
+            } else {
+
+
+                finishQuiz();
+
+            }
+
+        }
+    );
+
+
+
+    document
+        .getElementById(
+            "quizMessages"
+        )
+        .appendChild(
+            nextButton
+        );
+
+}
+
+
+
+// =====================================================
+// FINISH QUIZ
+// =====================================================
+
+function finishQuiz() {
+
+
+    speechSynthesis.cancel();
+
+
+    const quizMessages =
+        document.getElementById(
+            "quizMessages"
+        );
+
+
+    quizMessages.innerHTML =
+        "";
+
+
+    const total =
+        currentQuiz.questions.length;
+
+
+    const percentage =
+        Math.round(
+            (quizScore / total) *
+            100
+        );
+
+
+
+    const resultDiv =
+        document.createElement(
+            "div"
+        );
+
+
+    resultDiv.className =
+        "quiz-result";
+
+
+    resultDiv.innerHTML = `
+
+        <h2>
+            🎉 Quiz Finished!
+        </h2>
+
+        <p class="quiz-score">
+            ${quizScore} / ${total}
+        </p>
+
+        <p>
+            Score: ${percentage}%
+        </p>
+
+        <button id="restartQuizBtn">
+            🔄 Restart Quiz
+        </button>
+
+    `;
+
+
+
+    quizMessages.appendChild(
+        resultDiv
+    );
+
+
+
+    document
+        .getElementById(
+            "restartQuizBtn"
+        )
+        .addEventListener(
+            "click",
+            () => {
+
+
+                currentQuestionIndex =
+                    0;
+
+
+                quizScore =
+                    0;
+
+
+                displayQuizQuestion();
+
+            }
+        );
+
+}
+
+
+
+// =====================================================
+// START QUIZ
+// =====================================================
+
+async function startQuiz(
+    general = false
+) {
+
+
+    const selectedSections =
+        document.querySelectorAll(
+            "#chunkList input[type='checkbox']:checked"
+        );
+
+
+    const sections =
+        [];
+
+
+    selectedSections.forEach(
+        checkbox => {
+
+            sections.push(
+                Number(
+                    checkbox.value
+                )
+            );
+
+        }
+    );
+
+
+
+    // =========================================
+    // SECTION VALIDATION
+    // =========================================
+
+    if (
+        !general &&
+        sections.length === 0
+    ) {
+
+
+        alert(
+            "Please select at least one section."
+        );
+
+
+        return;
+
+    }
+
+
+
+    // =========================================
+    // QUIZ SETTINGS
+    // =========================================
+
+    const questionCount =
+        Number(
+            document.getElementById(
+                "quizQuestionCount"
+            ).value
+        );
+
+
+    const difficulty =
+        document.getElementById(
+            "quizDifficulty"
+        ).value;
+
+
+
+    try {
+
+
+        // Disable buttons
+
+        startQuizBtn.disabled =
+            true;
+
+
+        generalQuizBtn.disabled =
+            true;
+
+
+
+        const response =
+            await fetch(
+                "/quiz",
+                {
+
+                    method:
+                        "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            sections:
+                                sections,
+
+                            question_count:
+                                questionCount,
+
+                            difficulty:
+                                difficulty,
+
+                            general:
+                                general
+
+                        })
+
+                }
+            );
+
+
+
+        const data =
+            await response.json();
+
+
+
+        if (!response.ok) {
+
+
+            alert(
+                data.error ||
+                "Could not generate quiz."
+            );
+
+
+            return;
+
+        }
+
+
+
+        console.log(
+            "Quiz response:",
+            data
+        );
+
+
+
+        // =========================================
+        // CONVERT AI JSON
+        // =========================================
+
+        currentQuiz =
+            typeof data.quiz === "string"
+                ? JSON.parse(data.quiz)
+                : data.quiz;
+
+
+
+        // =========================================
+        // RESET QUIZ
+        // =========================================
+
+        currentQuestionIndex =
+            0;
+
+
+        quizScore =
+            0;
+
+
+
+        // =========================================
+        // SHOW FIRST QUESTION
+        // =========================================
+
+        displayQuizQuestion();
+
+
+
+    } catch (error) {
+
+
+        console.error(
+            "Quiz error:",
+            error
+        );
+
+
+        alert(
+            "Could not start the quiz."
+        );
+
+
+    } finally {
+
+
+        startQuizBtn.disabled =
+            false;
+
+
+        generalQuizBtn.disabled =
+            false;
+
+    }
+
+}
+
+
+
+// =====================================================
+// QUIZ BUTTON EVENTS
+// =====================================================
+
+startQuizBtn.addEventListener(
+    "click",
+    () => {
+
+        startQuiz(false);
+
+    }
+);
+
+
+
+generalQuizBtn.addEventListener(
+    "click",
+    () => {
+
+        startQuiz(true);
+
+    }
+);
+
+
+
+// =====================================================
+// CHAT MESSAGE
+// =====================================================
+
+function addChatMessage(
+    message,
+    type
+) {
+
+
+    const messageDiv =
+        document.createElement(
+            "div"
+        );
+
+
+    messageDiv.classList.add(
+        "chat-message"
+    );
+
+
+
+    if (
+        type === "user"
+    ) {
+
+
+        messageDiv.classList.add(
+            "user-message"
+        );
+
+
+        messageDiv.innerHTML = `
+
+            <strong>
+                👤 You
+            </strong>
+
+            <p>
+                ${message}
+            </p>
+
+        `;
+
+
+    } else {
+
+
+        messageDiv.classList.add(
+            "ai-message"
+        );
+
+
+        messageDiv.innerHTML = `
+
+            <strong>
+                🤖 AI
+            </strong>
+
+            <p>
+                ${message}
+            </p>
+
+        `;
+
+    }
+
+
+
+    chatMessages.appendChild(
+        messageDiv
+    );
+
+
+    chatMessages.scrollTop =
+        chatMessages.scrollHeight;
+
+}
+
+
+
+// =====================================================
+// PDF CHATBOT
+// =====================================================
+
+sendChatBtn.addEventListener(
+    "click",
+    async function () {
+
+
+        const message =
+            chatInput.value.trim();
+
+
+        if (!message) {
+
+            return;
+
+        }
+
+
+
+        // Show user message
+
+        addChatMessage(
+            message,
+            "user"
+        );
+
+
+
+        // Clear input
+
+        chatInput.value =
+            "";
+
+
+
+        // Disable button
+
+        sendChatBtn.disabled =
+            true;
+
+
+        sendChatBtn.textContent =
+            "Thinking... 🤖";
+
+
+
+        try {
+
+
+            const response =
+                await fetch(
+                    "/chat",
+                    {
+
+                        method:
+                            "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+
+                                question:
+                                    message
+
+                            })
+
+                    }
+                );
+
+
+
+            const data =
+                await response.json();
+
+
+
+            if (data.answer) {
+
+
+                addChatMessage(
+                    data.answer,
+                    "ai"
+                );
+
+
+            } else if (
+                data.error
+            ) {
+
+
+                addChatMessage(
+                    "❌ " +
+                    data.error,
+                    "ai"
+                );
+
+            }
+
+
+
+        } catch (error) {
+
+
+            console.error(
+                "Chat error:",
+                error
+            );
+
+
+            addChatMessage(
+                "❌ Something went wrong. Please try again.",
+                "ai"
+            );
+
+
+        } finally {
+
+
+            sendChatBtn.disabled =
+                false;
+
+
+            sendChatBtn.textContent =
+                "Send 🚀";
+
+        }
+
+    }
+);
+
+
+
+// =====================================================
+// SEND CHAT WITH ENTER
+// =====================================================
+
+chatInput.addEventListener(
+    "keydown",
+    function (event) {
+
+
+        if (
+            event.key === "Enter"
+        ) {
+
+
+            sendChatBtn.click();
+
+        }
+
+    }
+);
+
+
+</script>
+
+</body>
+
+</html>
