@@ -7,14 +7,16 @@ import ollama
 class AIService:
 
     def __init__(self, gemini_key, mistral_key):
-
+        print(f"DEBUG - Gemini Key received: {repr(gemini_key)}")
+        print(f"DEBUG - Mistral Key received: {repr(mistral_key)}")
+        
         # =========================
         # Gemini
         # =========================
-
         self.gemini = genai.Client(
             api_key=gemini_key
         )
+        ...
 
         # =========================
         # Mistral
@@ -40,7 +42,7 @@ class AIService:
         try:
 
             response = self.gemini.models.generate_content(
-                model="gemini-3.6-flash",
+                model="gemini-1.5-flash",
                 contents=prompt
             )
 

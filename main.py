@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 from services.ai_service import AIService
 
 import os
-import ollama
 import math
 import json
 import re
@@ -60,20 +59,14 @@ pdf_embeddings = []
 # =========================
 
 def create_embedding(text):
-
     try:
-
-        response = ollama.embeddings(
-            model="nomic-embed-text",
-            prompt=text
+        response = ai.gemini.models.embed_content(
+            model="text-embedding-004",
+            contents=text
         )
-
-        return response["embedding"]
-
+        return response.embedding[0].values
     except Exception as e:
-
         print("❌ Embedding error:", e)
-
         return None
 
 
