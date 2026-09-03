@@ -3,8 +3,6 @@
 <html lang="en">
 
 <head>
-
-```
 <meta charset="UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,15 +10,11 @@
 <title>Kenz.AI</title>
 
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-```
-
 </head>
 
 <body>
 
 <div class="container">
-
-```
 <!-- ========================= -->
 <!-- HEADER -->
 <!-- ========================= -->
@@ -158,8 +152,7 @@
         </div>
 
 
-        <div
-            <div class="summary-box">
+        <div class="summary-box">
 
     <div id="englishSummary"></div>
 
@@ -259,7 +252,60 @@
 
 
         <!-- ========================= -->
-        <!-- QUIZ MODE -->
+        
+<!-- ========================= -->
+<!-- PROGRESS DASHBOARD -->
+<!-- ========================= -->
+
+<div class="progress-dashboard">
+
+    <h2>📊 My Progress</h2>
+
+    <div class="progress-stats">
+
+        <div class="progress-card">
+            <span>🎯</span>
+            <h3 id="averageScore">0%</h3>
+            <p>Average Score</p>
+        </div>
+
+        <div class="progress-card">
+            <span>📝</span>
+            <h3 id="quizzesCompleted">0</h3>
+            <p>Quizzes Completed</p>
+        </div>
+
+        <div class="progress-card">
+            <span>✅</span>
+            <h3 id="correctAnswers">0</h3>
+            <p>Correct Answers</p>
+        </div>
+
+        <div class="progress-card">
+            <span>❌</span>
+            <h3 id="wrongAnswers">0</h3>
+            <p>Wrong Answers</p>
+        </div>
+
+    </div>
+
+    <div class="progress-details">
+
+        <div>
+            <h3>🏆 Best Score</h3>
+            <p id="bestScore">0%</p>
+        </div>
+
+        <div>
+            <h3>📈 Success Rate</h3>
+            <p id="successRate">0%</p>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- QUIZ MODE -->
         <!-- ========================= -->
 
         <div class="quiz-section">
@@ -407,8 +453,6 @@
     </div>
 
 </div>
-```
-
 </div>
 
 <script>
@@ -501,10 +545,12 @@ const startQuizBtn =
 
 let currentQuiz = null;
 
-let currentQuestionIndex = 0;
+ let currentQuestionIndex = 0;
 
 let quizScore = 0;
 
+
+  let quizWrongAnswers = [];
 
 
 // =====================================================
@@ -1311,70 +1357,33 @@ function displayQuizQuestion() {
 // CHECK QUIZ ANSWER
 // =====================================================
 
-function checkQuizAnswer(
-    selectedIndex,
-    selectedButton
-) {
-
+function checkQuizAnswer(selectedIndex, selectedButton) {
 
     const question =
-        currentQuiz.questions[
-            currentQuestionIndex
-        ];
-
-
-
-    // Stop speech
+        currentQuiz.questions[currentQuestionIndex];
 
     speechSynthesis.cancel();
 
-
-
     const optionButtons =
-        document.querySelectorAll(
-            ".quiz-option"
-        );
+        document.querySelectorAll(".quiz-option");
 
+    optionButtons.forEach(button => {
+        button.disabled = true;
+    });
 
-
-    // Disable all buttons
-
-    optionButtons.forEach(
-        button => {
-
-            button.disabled =
-                true;
-
-        }
-    );
-
-
-
-    // =========================================
-    // CORRECT ANSWER
-    // =========================================
-
-    if (
-        selectedIndex ===
-        question.answer
-    ) {
-
+    if (selectedIndex === question.answer) {
 
         quizScore++;
-
 
         selectedButton.classList.add(
             "correct-answer"
         );
 
-
     } else {
-
 
         selectedButton.classList.add(
             "wrong-answer"
         );
-
 
         optionButtons[
             question.answer
@@ -1382,52 +1391,44 @@ function checkQuizAnswer(
             "correct-answer"
         );
 
+        quizWrongAnswers.push({
+
+            question:
+                question.question,
+
+            selectedAnswer:
+                question.options[selectedIndex],
+
+            correctAnswer:
+                question.options[question.answer],
+
+            explanation:
+                question.explanation,
+
+            topic:
+                question.topic || "Unknown Topic"
+
+        });
     }
 
-
-
-    // =========================================
-    // EXPLANATION
-    // =========================================
-
     const explanation =
-        document.createElement(
-            "p"
-        );
-
+        document.createElement("p");
 
     explanation.className =
         "quiz-explanation";
 
-
     explanation.textContent =
         question.explanation;
 
-
-
     document
-        .getElementById(
-            "quizMessages"
-        )
-        .appendChild(
-            explanation
-        );
-
-
-
-    // =========================================
-    // NEXT BUTTON
-    // =========================================
+        .getElementById("quizMessages")
+        .appendChild(explanation);
 
     const nextButton =
-        document.createElement(
-            "button"
-        );
-
+        document.createElement("button");
 
     nextButton.className =
         "quiz-next";
-
 
     nextButton.textContent =
         currentQuestionIndex + 1 <
@@ -1435,27 +1436,20 @@ function checkQuizAnswer(
             ? "Next Question →"
             : "Finish Quiz";
 
-
-
     nextButton.addEventListener(
         "click",
         () => {
-
 
             if (
                 currentQuestionIndex + 1 <
                 currentQuiz.questions.length
             ) {
 
-
                 currentQuestionIndex++;
-
 
                 displayQuizQuestion();
 
-
             } else {
-
 
                 finishQuiz();
 
@@ -1464,18 +1458,10 @@ function checkQuizAnswer(
         }
     );
 
-
-
     document
-        .getElementById(
-            "quizMessages"
-        )
-        .appendChild(
-            nextButton
-        );
-
+        .getElementById("quizMessages")
+        .appendChild(nextButton);
 }
-
 
 
 // =====================================================
@@ -1484,153 +1470,280 @@ function checkQuizAnswer(
 
 function finishQuiz() {
 
-
     speechSynthesis.cancel();
-
-
-    const quizMessages =
-        document.getElementById(
-            "quizMessages"
-        );
-
-
-    quizMessages.innerHTML =
-        "";
-
 
     const total =
         currentQuiz.questions.length;
 
-
     const percentage =
         Math.round(
-            (quizScore / total) *
-            100
+            (quizScore / total) * 100
         );
 
+    let performanceMessage;
 
+    if (percentage >= 90) {
 
-    const resultDiv =
-        document.createElement(
-            "div"
-        );
+        performanceMessage =
+            "Excellent! 🎉 You have a very strong understanding.";
 
+    } else if (percentage >= 70) {
 
-    resultDiv.className =
-        "quiz-result";
+        performanceMessage =
+            "Good job! 👍 You understand most of the material.";
 
+    } else if (percentage >= 50) {
 
-    resultDiv.innerHTML = `
+        performanceMessage =
+            "Not bad. 📚 A little more revision will help.";
 
-        <h2>
-            🎉 Quiz Finished!
-        </h2>
+    } else {
 
-        <p class="quiz-score">
-            ${quizScore} / ${total}
-        </p>
+        performanceMessage =
+            "You need more revision. 💪 Focus on your weak topics.";
 
-        <p>
-            Score: ${percentage}%
-        </p>
+    }
 
-        <button id="restartQuizBtn">
-            🔄 Restart Quiz
-        </button>
+    const topicStats = {};
+
+    quizWrongAnswers.forEach(wrong => {
+
+        const topic =
+            wrong.topic || "Unknown Topic";
+
+        if (!topicStats[topic]) {
+            topicStats[topic] = 0;
+        }
+
+        topicStats[topic]++;
+
+    });
+
+    const sortedTopics =
+        Object.entries(topicStats)
+            .sort((a, b) => b[1] - a[1]);
+
+    let html = `
+
+        <div class="quiz-result">
+
+            <h2>
+                🎯 Quiz Finished
+            </h2>
+
+            <div class="quiz-score">
+                ${quizScore} / ${total}
+            </div>
+
+            <div class="quiz-percentage">
+                Score: ${percentage}%
+            </div>
+
+            <p class="quiz-performance">
+                ${performanceMessage}
+            </p>
+
+            <hr>
+
+            <h3>
+                🧠 Smart Analysis
+            </h3>
 
     `;
 
+    if (sortedTopics.length > 0) {
 
+        html += `
 
-    quizMessages.appendChild(
-        resultDiv
-    );
+            <div class="weak-topics">
 
+                <h4>
+                    🔴 Weak Topics
+                </h4>
 
+                <ul>
 
-    document
-        .getElementById(
-            "restartQuizBtn"
-        )
-        .addEventListener(
-            "click",
-            () => {
+        `;
 
+        sortedTopics.forEach(
+            ([topic, count]) => {
 
-                currentQuestionIndex =
-                    0;
+                html += `
 
+                    <li>
 
-                quizScore =
-                    0;
+                        <strong>
+                            ${topic}
+                        </strong>
 
+                        <span>
+                            ${count}
+                            mistake${count > 1 ? "s" : ""}
+                        </span>
 
-                displayQuizQuestion();
+                    </li>
+
+                `;
 
             }
         );
 
+        html += `
+
+                </ul>
+
+            </div>
+
+        `;
+
+    } else {
+
+        html += `
+
+            <div class="perfect-score">
+
+                🏆 Perfect Score!
+
+                <p>
+                    You answered every question correctly.
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+    if (quizWrongAnswers.length > 0) {
+
+        html += `
+
+            <hr>
+
+            <h3>
+                ❌ Review Your Mistakes
+            </h3>
+
+        `;
+
+        quizWrongAnswers.forEach(
+            (wrong, index) => {
+
+                html += `
+
+                    <div class="wrong-answer-review">
+
+                        <h4>
+                            Question ${index + 1}
+                        </h4>
+
+                        <p>
+                            <strong>
+                                ${wrong.question}
+                            </strong>
+                        </p>
+
+                        <p>
+                            ❌ Your answer:
+                            ${wrong.selectedAnswer}
+                        </p>
+
+                        <p>
+                            ✅ Correct answer:
+                            ${wrong.correctAnswer}
+                        </p>
+
+                        <p>
+                            💡 ${wrong.explanation}
+                        </p>
+
+                        <small>
+                            📚 Topic:
+                            ${wrong.topic || "Unknown"}
+                        </small>
+
+                    </div>
+
+                `;
+
+            }
+        );
+
+    }
+
+    html += `
+
+            <div class="quiz-actions">
+
+                <button
+                    onclick="restartQuiz()"
+                    class="quiz-retry"
+                >
+                    🔄 Retry Quiz
+                </button>
+
+            </div>
+
+        </div>
+
+    `;
+
+    document
+        .getElementById("quizMessages")
+        .innerHTML = html;
+
+    saveQuizProgress();
+    updateProgressDashboard();
 }
 
+
+// =====================================================
+// RESTART QUIZ
+// =====================================================
+
+function restartQuiz() {
+
+    currentQuestionIndex = 0;
+
+    quizScore = 0;
+
+    quizWrongAnswers = [];
+
+    displayQuizQuestion();
+}
 
 
 // =====================================================
 // START QUIZ
 // =====================================================
 
-async function startQuiz(
-    general = false
-) {
+async function startQuiz(general = false) {
 
+    const selectedSections = [];
 
-    const selectedSections =
-        document.querySelectorAll(
-            "#chunkList input[type='checkbox']:checked"
-        );
+    if (!general) {
 
+        document
+            .querySelectorAll(
+                '#chunkList input[type="checkbox"]:checked'
+            )
+            .forEach(checkbox => {
 
-    const sections =
-        [];
+                selectedSections.push(
+                    Number(checkbox.value)
+                );
 
+            });
 
-    selectedSections.forEach(
-        checkbox => {
+        if (selectedSections.length === 0) {
 
-            sections.push(
-                Number(
-                    checkbox.value
-                )
+            alert(
+                "Please select at least one section."
             );
 
+            return;
         }
-    );
-
-
-
-    // =========================================
-    // SECTION VALIDATION
-    // =========================================
-
-    if (
-        !general &&
-        sections.length === 0
-    ) {
-
-
-        alert(
-            "Please select at least one section."
-        );
-
-
-        return;
-
     }
-
-
-
-    // =========================================
-    // QUIZ SETTINGS
-    // =========================================
 
     const questionCount =
         Number(
@@ -1639,35 +1752,23 @@ async function startQuiz(
             ).value
         );
 
-
     const difficulty =
         document.getElementById(
             "quizDifficulty"
         ).value;
 
-
-
     try {
 
+        startQuizBtn.disabled = true;
 
-        // Disable buttons
-
-        startQuizBtn.disabled =
-            true;
-
-
-        generalQuizBtn.disabled =
-            true;
-
-
+        generalQuizBtn.disabled = true;
 
         const response =
             await fetch(
                 "/quiz",
                 {
 
-                    method:
-                        "POST",
+                    method: "POST",
 
                     headers: {
                         "Content-Type":
@@ -1678,7 +1779,7 @@ async function startQuiz(
                         JSON.stringify({
 
                             sections:
-                                sections,
+                                selectedSections,
 
                             question_count:
                                 questionCount,
@@ -1694,125 +1795,253 @@ async function startQuiz(
                 }
             );
 
-
-
         const data =
             await response.json();
 
-
-
         if (!response.ok) {
-
 
             alert(
                 data.error ||
                 "Could not generate quiz."
             );
 
-
             return;
-
         }
-
-
 
         console.log(
             "Quiz response:",
             data
         );
 
-
-
-        // =========================================
-        // CONVERT AI JSON
-        // =========================================
-
         currentQuiz =
             typeof data.quiz === "string"
                 ? JSON.parse(data.quiz)
                 : data.quiz;
 
+        currentQuestionIndex = 0;
 
+        quizScore = 0;
 
-        // =========================================
-        // RESET QUIZ
-        // =========================================
-
-        currentQuestionIndex =
-            0;
-
-
-        quizScore =
-            0;
-
-
-
-        // =========================================
-        // SHOW FIRST QUESTION
-        // =========================================
+        quizWrongAnswers = [];
 
         displayQuizQuestion();
 
-
-
     } catch (error) {
-
 
         console.error(
             "Quiz error:",
             error
         );
 
-
         alert(
             "Could not start the quiz."
         );
 
-
     } finally {
 
+        startQuizBtn.disabled = false;
 
-        startQuizBtn.disabled =
-            false;
-
-
-        generalQuizBtn.disabled =
-            false;
+        generalQuizBtn.disabled = false;
 
     }
-
 }
 
+
+// =====================================================
+// PROGRESS DASHBOARD
+// =====================================================
+
+function getQuizProgress() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem("kenzQuizProgress")
+        ) || {
+            quizzes: [],
+            totalCorrect: 0,
+            totalWrong: 0
+        };
+
+    } catch (error) {
+
+        return {
+            quizzes: [],
+            totalCorrect: 0,
+            totalWrong: 0
+        };
+
+    }
+}
+
+
+function saveQuizProgress() {
+
+    const progress =
+        getQuizProgress();
+
+    const total =
+        currentQuiz.questions.length;
+
+    const percentage =
+        Math.round(
+            (quizScore / total) * 100
+        );
+
+    progress.quizzes.push({
+        score: quizScore,
+        total: total,
+        percentage: percentage,
+        date: new Date().toISOString()
+    });
+
+    progress.totalCorrect +=
+        quizScore;
+
+    progress.totalWrong +=
+        total - quizScore;
+
+    localStorage.setItem(
+        "kenzQuizProgress",
+        JSON.stringify(progress)
+    );
+}
+
+
+function updateProgressDashboard() {
+
+    const progress =
+        getQuizProgress();
+
+    const quizzes =
+        progress.quizzes || [];
+
+    const completed =
+        quizzes.length;
+
+    const correct =
+        progress.totalCorrect || 0;
+
+    const wrong =
+        progress.totalWrong || 0;
+
+    const totalAnswers =
+        correct + wrong;
+
+    const average =
+        completed > 0
+            ? Math.round(
+                quizzes.reduce(
+                    (sum, quiz) =>
+                        sum + quiz.percentage,
+                    0
+                ) / completed
+            )
+            : 0;
+
+    const best =
+        completed > 0
+            ? Math.max(
+                ...quizzes.map(
+                    quiz => quiz.percentage
+                )
+            )
+            : 0;
+
+    const successRate =
+        totalAnswers > 0
+            ? Math.round(
+                (correct / totalAnswers) * 100
+            )
+            : 0;
+
+    const averageElement =
+        document.getElementById(
+            "averageScore"
+        );
+
+    const completedElement =
+        document.getElementById(
+            "quizzesCompleted"
+        );
+
+    const correctElement =
+        document.getElementById(
+            "correctAnswers"
+        );
+
+    const wrongElement =
+        document.getElementById(
+            "wrongAnswers"
+        );
+
+    const bestElement =
+        document.getElementById(
+            "bestScore"
+        );
+
+    const successElement =
+        document.getElementById(
+            "successRate"
+        );
+
+    if (averageElement)
+        averageElement.textContent =
+            average + "%";
+
+    if (completedElement)
+        completedElement.textContent =
+            completed;
+
+    if (correctElement)
+        correctElement.textContent =
+            correct;
+
+    if (wrongElement)
+        wrongElement.textContent =
+            wrong;
+
+    if (bestElement)
+        bestElement.textContent =
+            best + "%";
+
+    if (successElement)
+        successElement.textContent =
+            successRate + "%";
+}
 
 
 // =====================================================
 // QUIZ BUTTON EVENTS
 // =====================================================
 
-startQuizBtn.addEventListener(
-    "click",
-    () => {
+if (startQuizBtn) {
 
-        startQuiz(false);
+    startQuizBtn.addEventListener(
+        "click",
+        () => startQuiz(false)
+    );
 
-    }
-);
+}
+
+if (generalQuizBtn) {
+
+    generalQuizBtn.addEventListener(
+        "click",
+        () => startQuiz(true)
+    );
+
+}
 
 
-
-generalQuizBtn.addEventListener(
-    "click",
-    () => {
-
-        startQuiz(true);
-
-    }
-);
-
+// Load saved progress when page opens
+updateProgressDashboard();
 
 
 // =====================================================
 // CHAT MESSAGE
+// =====================================================
+
 // =====================================================
 
 function addChatMessage(

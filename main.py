@@ -319,47 +319,13 @@ def upload():
 
 
         # =========================
-        # CREATE EMBEDDINGS
+        # EMBEDDINGS DISABLED
         # =========================
 
         pdf_embeddings = []
 
-        valid_chunks = []
-
-
-        for i, chunk in enumerate(
-            pdf_chunks
-        ):
-
-            print(
-                f"🧠 Creating embedding "
-                f"{i + 1}/{len(pdf_chunks)}..."
-            )
-
-
-            embedding = create_embedding(
-                chunk
-            )
-
-
-            if embedding is not None:
-
-                valid_chunks.append(
-                    chunk
-                )
-
-                pdf_embeddings.append(
-                    embedding
-                )
-
-
-        pdf_chunks = valid_chunks
-
-
-        print(
-            "🧠 Embeddings created:",
-            len(pdf_embeddings)
-        )
+        print("ℹ️ Embeddings disabled.")
+        print("🧩 PDF chunks available:", len(pdf_chunks))
 
 
         # =========================
@@ -508,38 +474,30 @@ PDF CONTENT:
 # CHATBOT
 # =========================
 
-@app.route(
-    "/chat",
-    methods=["POST"]
-)
+@app.route("/chat", methods=["POST"])
 def chat():
 
+    global pdf_text
     global pdf_chunks
     global pdf_embeddings
 
+    print("================================")
+    print("💬 CHATBOT DEBUG")
+    print("📄 PDF TEXT LENGTH:", len(pdf_text))
+    print("🧩 PDF CHUNKS:", len(pdf_chunks))
+    print("🧠 PDF EMBEDDINGS:", len(pdf_embeddings))
+    print("================================")
 
-    # =========================
-    # CHECK PDF
-    # =========================
-
-    if not pdf_chunks:
-
+    if not pdf_text.strip():
         return jsonify({
-
-            "error":
-                "Please upload a PDF first."
-
+            "error": "Please upload a PDF first."
         }), 400
-
 
     # =========================
     # GET QUESTION
     # =========================
 
-    data = request.get_json(
-        silent=True
-    ) or {}
-
+    data = request.get_json(silent=True) or {}
 
     question = (
         data.get("question")
@@ -547,109 +505,111 @@ def chat():
         or ""
     ).strip()
 
-
     if not question:
-
         return jsonify({
-
-            "error":
-                "Please enter a question."
-
+            "error": "Please enter a question."
         }), 400
 
-
     # =========================
-    # CREATE QUESTION EMBEDDING
-    # =========================
-
-    question_embedding = (
-        create_embedding(
-            question
-        )
-    )
-
-
-    if question_embedding is None:
-
-        return jsonify({
-
-            "error":
-                "Could not process the question."
-
-        }), 500
-
-
-    # =========================
-    # CALCULATE SIMILARITY
+    # CREATE CONTEXT
     # =========================
 
-    similarities = []
+    context = pdf_text[:50000]
 
+    if not context.strip():
+     return jsonify({
+        "error": "Please upload a PDF first."
+    }), 400
 
-    for i, embedding in enumerate(
-        pdf_embeddings
-    ):
+    # -------------------------
+    # TRY RAG / EMBEDDINGS
+    # -------------------------
 
-        similarity = cosine_similarity(
-            question_embedding,
-            embedding
-        )
+    if pdf_chunks and pdf_embeddings:
 
+        question_embedding = create_embedding(question)
 
-        similarities.append(
-            (
-                similarity,
-                i
+        if question_embedding is not None:
+
+            similarities = []
+
+            for i, embedding in enumerate(pdf_embeddings):
+
+                similarity = cosine_similarity(
+                    question_embedding,
+                    embedding
+                )
+
+                similarities.append(
+                    (similarity, i)
+                )
+
+            similarities.sort(
+                reverse=True
             )
-        )
 
+            # Take the 3 most relevant chunks
+            top_results = similarities[:3]
 
-    # Highest similarity first
+            context_parts = []
 
-    similarities.sort(
-        reverse=True
-    )
+            for similarity, index in top_results:
 
+                context_parts.append(
+                    pdf_chunks[index]
+                )
 
-    # =========================
-    # TOP 3 CHUNKS
-    # =========================
-
-    top_results = similarities[:3]
-
-
-    context_parts = []
-
-
-    for similarity, index in top_results:
-
-        context_parts.append(
-            pdf_chunks[index]
-        )
-
-
-    context = "\n\n".join(
-        context_parts
-    )
-
+            context = "\n\n".join(
+                context_parts
+            )
 
     # =========================
-    # CHAT PROMPT
+    # FALLBACK
+    # =========================
+
+    # If embeddings are not available,
+    # use the extracted PDF text directly.
+
+    if not context.strip():
+
+        context = pdf_text[:50000]
+
+    # =========================
+    # AI PROMPT
     # =========================
 
     prompt = f"""
 You are an AI study assistant.
 
-Answer the student's question using
-ONLY the provided PDF context.
+You are answering questions about a PDF
+uploaded by the student.
 
-If the answer is not present in the
-context, clearly say that the information
-is not available in the provided PDF.
+IMPORTANT RULES:
 
-Do not invent information.
+1. Answer using ONLY the information
+   contained in the PDF context.
 
-Give a clear and helpful answer.
+2. Do NOT invent information.
+
+3. If the answer is not present in the PDF,
+   say clearly:
+
+   "This information is not available
+   in the provided PDF."
+
+4. Give a clear and helpful explanation.
+
+5. If the student asks for a definition,
+   explain it simply.
+
+6. If the student asks for steps,
+   give them in numbered points.
+
+7. If the student asks for a comparison,
+   organize the answer clearly.
+
+8. Answer in the same language used by
+   the student whenever possible.
 
 PDF CONTEXT:
 
@@ -658,43 +618,29 @@ PDF CONTEXT:
 STUDENT QUESTION:
 
 {question}
+
+ANSWER:
 """
 
-
     # =========================
-    # AI GENERATION
+    # GENERATE ANSWER
     # =========================
 
     try:
 
-        answer = ai.generate(
-            prompt
-        )
-
+        answer = ai.generate(prompt)
 
         return jsonify({
-
-            "answer":
-                answer
-
+            "answer": answer
         })
-
 
     except Exception as e:
 
-        print(
-            "❌ Chat error:",
-            e
-        )
-
+        print("❌ Chat error:", e)
 
         return jsonify({
-
-            "error":
-                "AI could not answer the question."
-
+            "error": "AI could not answer the question."
         }), 500
-
 
 # =========================
 # QUIZ
@@ -940,6 +886,8 @@ Rules:
 - Do not invent information.
 - Include the correct answer.
 - Include a short explanation for the correct answer.
+- Include a short topic describing the concept tested.
+- The topic must be based ONLY on the PDF content.
 - Return ONLY valid JSON.
 - The answer must be the INDEX of the correct option.
 - Index starts from 0.
@@ -949,15 +897,17 @@ JSON format:
 {{
     "questions": [
         {{
-            "question": "Question text",
-            "options": [
-                "Option A",
-                "Option B",
-                "Option C",
-                "Option D"
-            ],
-            "answer": 0,
-            "explanation": "Explanation"
+    "question": "Question text",
+    "options": [
+        "Option A",
+        "Option B",
+        "Option C",
+        "Option D"
+    ],
+    "answer": 0,
+    "explanation": "Explanation",
+    "topic": "Main topic of this question"
+
         }}
     ]
 }}
@@ -1107,6 +1057,13 @@ PDF CONTENT:
                 raise ValueError(
                     f"Question {i + 1} has no text."
                 )
+            # Topic
+
+            if not question.get("topic"):
+
+                  raise ValueError(
+                       f"Question {i + 1} has no topic."
+                 )
 
 
             # Options

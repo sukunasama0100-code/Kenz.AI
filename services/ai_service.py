@@ -42,7 +42,7 @@ class AIService:
         try:
 
             response = self.gemini.models.generate_content(
-                model="gemini-1.5-flash",
+                model="gemini-3.6-flash",
                 contents=prompt
             )
 
