@@ -31,11 +31,13 @@ app = Flask(__name__)
 gemini_key = os.getenv("GEMINI_API_KEY")
 mistral_key = os.getenv("MISTRAL_API_KEY")
 
+print("🔑 GEMINI_API_KEY:", "موجودة ✅" if gemini_key else "غير موجودة ❌")
+print("🔑 MISTRAL_API_KEY:", "موجودة ✅" if mistral_key else "غير موجودة ❌")
+
 ai = AIService(
     gemini_key,
     mistral_key
 )
-
 
 # =========================
 # GLOBAL PDF DATA
@@ -1259,8 +1261,8 @@ PDF CONTENT:
 
 if __name__ == "__main__":
 
+    port = int(os.environ.get("PORT", 8080))
     app.run(
-        debug=True,
-        host="127.0.0.1",
-        port=5000
+        host="0.0.0.0",
+        port=port
     )
