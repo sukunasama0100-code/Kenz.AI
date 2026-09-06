@@ -2,7 +2,6 @@ from flask import Flask, jsonify, render_template, request
 from pypdf import PdfReader
 from dotenv import load_dotenv
 from services.ai_service import AIService
-
 import os
 import math
 import json
@@ -30,12 +29,29 @@ app = Flask(__name__)
 gemini_key = os.getenv("GEMINI_API_KEY")
 mistral_key = os.getenv("MISTRAL_API_KEY")
 
+cloudflare_token = os.getenv("CLOUDFLARE_API_TOKEN")
+cloudflare_account_id = os.getenv("CLOUDFLARE_ACCOUNT_ID")
+cloudflare_model = os.getenv("CLOUDFLARE_MODEL_NAME")
+ai_service = AIService(
+    gemini_key,
+    mistral_key,
+    cloudflare_token,
+    cloudflare_account_id,
+    cloudflare_model
+)
+
 print("🔑 GEMINI_API_KEY:", "موجودة ✅" if gemini_key else "غير موجودة ❌")
 print("🔑 MISTRAL_API_KEY:", "موجودة ✅" if mistral_key else "غير موجودة ❌")
+print("🔑 CLOUDFLARE_API_TOKEN:", "موجودة ✅" if cloudflare_token else "غير موجودة ❌")
+print("🔑 CLOUDFLARE_ACCOUNT_ID:", "موجودة ✅" if cloudflare_account_id else "غير موجودة ❌")
+print("🤖 CLOUDFLARE_MODEL:", cloudflare_model or "غير موجود ❌")
 
 ai = AIService(
     gemini_key,
-    mistral_key
+    mistral_key,
+    cloudflare_token,
+    cloudflare_account_id,
+    cloudflare_model
 )
 
 # =========================
@@ -110,6 +126,9 @@ def home():
     )
 
 
+
+
+
 # =========================
 # UPLOAD PDF
 # =========================
@@ -125,34 +144,26 @@ def upload():
     global pdf_chunks
     global pdf_embeddings
 
-
     # =========================
     # CHECK FILE
     # =========================
 
     if "file" not in request.files:
-
         return jsonify({
             "error": "No PDF file uploaded."
         }), 400
 
-
     file = request.files["file"]
 
-
     if file.filename == "":
-
         return jsonify({
             "error": "No file selected."
         }), 400
 
-
     if not file.filename.lower().endswith(".pdf"):
-
         return jsonify({
             "error": "Please upload a PDF file."
         }), 400
-
 
     # =========================
     # RESET OLD DATA
@@ -162,7 +173,6 @@ def upload():
     pdf_sections = []
     pdf_chunks = []
     pdf_embeddings = []
-
 
     try:
 
@@ -181,7 +191,6 @@ def upload():
             total_pages
         )
 
-
         # =========================
         # EXTRACT FULL TEXT
         # =========================
@@ -199,11 +208,9 @@ def upload():
                 page_text
             )
 
-
         pdf_text = "\n".join(
             all_text
         )
-
 
         # =========================
         # CHUNK SIZE
@@ -215,20 +222,14 @@ def upload():
         )
 
         try:
-
             chunk_size = int(
                 chunk_size
             )
-
         except:
-
             chunk_size = 10
-
 
         if chunk_size not in [5, 10, 20]:
-
             chunk_size = 10
-
 
         # =========================
         # CREATE SECTIONS
@@ -237,7 +238,6 @@ def upload():
         pdf_sections = []
         pdf_chunks = []
 
-
         for i in range(
             0,
             total_pages,
@@ -245,7 +245,6 @@ def upload():
         ):
 
             section_text = ""
-
 
             for j in range(
                 i,
@@ -265,7 +264,6 @@ def upload():
                     page_text + "\n"
                 )
 
-
             if section_text.strip():
 
                 # Keep original section
@@ -274,7 +272,6 @@ def upload():
                 pdf_sections.append(
                     section_text
                 )
-
 
                 # =========================
                 # SMALL RAG CHUNKS
@@ -285,7 +282,6 @@ def upload():
                 )
 
                 words_per_embedding = 500
-
 
                 for k in range(
                     0,
@@ -299,13 +295,11 @@ def upload():
                         ]
                     )
 
-
                     if small_chunk.strip():
 
                         pdf_chunks.append(
                             small_chunk
                         )
-
 
         print(
             "📚 Total sections:",
@@ -317,7 +311,6 @@ def upload():
             len(pdf_chunks)
         )
 
-
         # =========================
         # EMBEDDINGS DISABLED
         # =========================
@@ -327,19 +320,16 @@ def upload():
         print("ℹ️ Embeddings disabled.")
         print("🧩 PDF chunks available:", len(pdf_chunks))
 
-
         # =========================
         # CREATE SUMMARY
         # =========================
 
         summary_text = pdf_text
 
-
         # Prevent extremely large
         # summary prompts
 
         MAX_SUMMARY_CHARS = 30000
-
 
         if len(summary_text) > MAX_SUMMARY_CHARS:
 
@@ -348,7 +338,6 @@ def upload():
                     :MAX_SUMMARY_CHARS
                 ]
             )
-
 
         summary_prompt = f"""
 You are an AI study assistant.
@@ -381,13 +370,11 @@ PDF CONTENT:
 {summary_text}
 """
 
-
         try:
 
             summary = ai.generate(
                 summary_prompt
             )
-
 
         except Exception as e:
 
@@ -400,13 +387,11 @@ PDF CONTENT:
                 "Could not generate summary."
             )
 
-
         # =========================
         # RETURN SECTIONS
         # =========================
 
         sections = []
-
 
         for i in range(
             math.ceil(
@@ -430,7 +415,6 @@ PDF CONTENT:
 
             })
 
-
         return jsonify({
 
             "pages":
@@ -453,7 +437,6 @@ PDF CONTENT:
 
         })
 
-
     except Exception as e:
 
         print(
@@ -461,12 +444,71 @@ PDF CONTENT:
             e
         )
 
-
         return jsonify({
 
             "error":
                 "Could not process the PDF."
 
+        }), 500
+
+# =========================
+# TRANSLATE
+# =========================
+
+@app.route("/translate", methods=["POST"])
+def translate():
+
+    data = request.get_json()
+
+    text = (data.get("text") or "").strip()
+    language = data.get("language")
+
+    languages = {
+        "en": "English",
+        "fr": "French",
+        "ar": "Arabic"
+    }
+
+    if not text:
+        return jsonify({
+            "error": "No text provided."
+        }), 400
+
+    if language not in languages:
+        return jsonify({
+            "error": "Unsupported language."
+        }), 400
+
+    language_name = languages[language]
+
+    prompt = f"""
+Translate the following text into {language_name}.
+
+Instructions:
+- Preserve the exact meaning.
+- Preserve important facts and technical terms.
+- Keep the same structure when possible.
+- Do not add explanations.
+- Return ONLY the translation.
+
+TEXT:
+{text}
+"""
+
+    try:
+
+        translation = ai.generate(prompt)
+
+        return jsonify({
+            "translation": translation
+        })
+
+    except Exception as e:
+
+        print("Translation error:", e)
+
+        return jsonify({
+            "error": "Translation failed."
         }), 500
 
 
@@ -888,34 +930,34 @@ Rules:
 - Include a short explanation for the correct answer.
 - Include a short topic describing the concept tested.
 - The topic must be based ONLY on the PDF content.
-- Return ONLY valid JSON.
-- The answer must be the INDEX of the correct option.
-- Index starts from 0.
+        - Return ONLY valid JSON.
+        - The answer must be the INDEX of the correct option.
+        - Index starts from 0.
 
-JSON format:
+        JSON format:
 
-{{
-    "questions": [
         {{
-    "question": "Question text",
-    "options": [
-        "Option A",
-        "Option B",
-        "Option C",
-        "Option D"
-    ],
-    "answer": 0,
-    "explanation": "Explanation",
-    "topic": "Main topic of this question"
+            "questions": [
+                {{
+            "question": "Question text",
+            "options": [
+                "Option A",
+                "Option B",
+                "Option C",
+                "Option D"
+            ],
+            "answer": 0,
+            "explanation": "Explanation",
+            "topic": "Main topic of this question"
 
+                }}
+            ]
         }}
-    ]
-}}
 
-PDF CONTENT:
+        PDF CONTENT:
 
-{quiz_text}
-"""
+        {quiz_text}
+        """
 
 
     # =========================
@@ -924,39 +966,42 @@ PDF CONTENT:
 
     try:
 
-        result = ai.generate(
-            prompt
-        )
+        result = ai.generate(prompt)
+
+        print("🤖 Raw Quiz Response:")
+        print(repr(result))
+
+        if not result:
+            raise ValueError(
+                "AI returned an empty response."
+            )
+
+        result = str(result).strip()
+
+        if not result:
+            raise ValueError(
+                "AI returned an empty response after cleaning."
+    )
+
+        
 
 
-        print(
-            "🤖 Raw Quiz Response:"
-        )
-
-        print(result)
-
-
-        # =========================
+# =========================
         # CLEAN JSON
         # =========================
 
-        result = result.strip()
+        result = str(result).strip()
 
+        print("🧹 Before JSON cleaning:")
+        print(repr(result))
 
+        # Remove markdown code fences
         result = re.sub(
-            r"^```json\s*",
+            r"^```(?:json)?\s*",
             "",
             result,
             flags=re.IGNORECASE
         )
-
-
-        result = re.sub(
-            r"^```\s*",
-            "",
-            result
-        )
-
 
         result = re.sub(
             r"\s*```$",
@@ -964,8 +1009,22 @@ PDF CONTENT:
             result
         )
 
-
         result = result.strip()
+
+        # If AI added text before/after JSON,
+        # extract the JSON object
+        start = result.find("{")
+        end = result.rfind("}")
+
+        if start == -1 or end == -1 or end <= start:
+            raise ValueError(
+                "AI response does not contain a valid JSON object."
+            )
+
+        result = result[start:end + 1]
+
+        print("🧹 Cleaned Quiz JSON:")
+        print(result)
 
 
         # =========================
@@ -1012,6 +1071,11 @@ PDF CONTENT:
             raise ValueError(
                 "Quiz contains no questions."
             )
+        if len(questions) != question_count:
+
+           raise ValueError(
+        f"AI generated {len(questions)} questions instead of {question_count}."
+    )
 
 
         # Keep only requested
@@ -1204,7 +1268,53 @@ PDF CONTENT:
 
         }), 500
 
+# =========================
+# SOLVE EXERCISE / IMAGE
+# =========================
 
+@app.route("/solve-image", methods=["POST"])
+def solve_image():
+    print("================================")
+    print("📸 IMAGE SOLVER DEBUG")
+    print("================================")
+
+    # 1. استقبال الـ Prompt أو السؤال النصي المرفق مع الصورة
+    prompt = request.form.get("prompt", "").strip()
+    
+    # 2. التحقق من وجود الملف (الصورة)
+    if "exercise_image" not in request.files:
+        return jsonify({"error": "No image uploaded."}), 400
+
+    image_file = request.files["exercise_image"]
+
+    if image_file.filename == "":
+        return jsonify({"error": "No image selected."}), 400
+
+    try:
+        # 3. حفظ الصورة مؤقتاً في السيرفر للمعالجة
+        upload_folder = "uploads"
+        os.makedirs(upload_folder, exist_ok=True)
+        image_path = os.path.join(upload_folder, image_file.filename)
+        image_file.save(image_path)
+
+        # 4. استدعاء AIService لتحليل الصورة عبر Gemini-1.5-flash
+        print("🤖 Sending image to Gemini...")
+        answer = ai.generate_with_image(prompt, image_path)
+
+        # 5. تنظيف ومسح الصورة من السيرفر بعد الانتهاء
+        if os.path.exists(image_path):
+            os.remove(image_path)
+
+        return jsonify({
+            "answer": answer
+        })
+
+    except Exception as e:
+        print("❌ Image solving error:", e)
+        return jsonify({
+            "error": "AI could not process the image."
+        }), 500
+    
 # =========================
 # RUN SERVER
 # =========================
